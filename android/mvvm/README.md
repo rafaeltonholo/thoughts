@@ -8,21 +8,9 @@ It is divided into **Model**, **View**, **ViewModel**, where:
 - **ViewModel** is located between both **View** and **Model** layers, acting as a link. It's responsible for transforming the data from the **Model** and serving it to the **View** via data streams. It also use hooks or callbacks to update the **View**.
 
 The following chart ilustrates the core of **MVVM** Pattern
-```
-                                 Model Change
-       UI Events  ┌───────────┐    Events
-      ┌---------->│           │<------------┐
-      |   VM Data │ ViewModel ├────┐        |
-      |  ┌────────┤           │    │        |
-      |  │ Stream └───┬───────┘    │        |
-      │  ▼            │    ▲   Send│Data    │
-┌─────┴────┐          |    │       │ ┌──────┴──┐
-│   View   │<---------┘    │       └►│  Model  │
-└──────────┘Data Change    │         └────┬────┘
-               Events      │              │
-                           └──────────────┘
-                            Receive Data
-```
+
+![mvvm-chart.svg](mvvm-chart.svg)
+
 
 The **MVVM** pattern has some similiarities with the **MVP** (Model  View Presenter) where the main difference is between the **Presenter** and the **ViewModel**. 
 
