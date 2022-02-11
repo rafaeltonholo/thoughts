@@ -12,6 +12,7 @@ The following chart ilustrates the core of **MVVM** Pattern
 ![mvvm-chart.svg](mvvm-chart.svg)
 
 
+
 The **MVVM** pattern has some similiarities with the **MVP** (Model  View Presenter) where the main difference is between the **Presenter** and the **ViewModel**. 
 
 In **MVP**, the **Presenter** holds a reference of the **View** and updates the **View** triggering **View**'s methods. The relationship between **View** and **Presenter** is 1:1.
