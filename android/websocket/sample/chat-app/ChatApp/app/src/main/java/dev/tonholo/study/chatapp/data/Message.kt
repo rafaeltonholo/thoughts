@@ -1,4 +1,8 @@
 package dev.tonholo.study.chatapp.data
 
-class Message {
-}
+import java.util.*
+
+data class Message(
+    val content: String,
+    val received: Date,
+)
