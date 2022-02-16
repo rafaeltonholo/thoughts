@@ -1,5 +1,6 @@
-profile: service
+applicationType: default
 defaultPackage: websocket.chat
----
-testFramework: junit
-sourceLanguage: java
+testFramework: spock
+sourceLanguage: kotlin
+buildTool: gradle_kotlin
+features: [annotation-api, app-name, gradle, http-client, jackson-databind, kotlin, kotlin-application, kotlin-build, logback, micronaut-build, netty-server, readme, shade, spock, yaml]
