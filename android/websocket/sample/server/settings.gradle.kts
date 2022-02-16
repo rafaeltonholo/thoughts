@@ -1,2 +1,1 @@
-
-rootProject.name="websocket-chat"
+rootProject.name = "dev.tonholo.websocket-chat"
