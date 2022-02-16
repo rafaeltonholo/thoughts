@@ -11,12 +11,12 @@ import okhttp3.Response
 import okio.ByteString
 import javax.inject.Inject
 
-sealed class SocketUpdate {
+sealed class SocketEvent {
     data class ChannelOpened(
         val response: Response,
-    ) : SocketUpdate()
+    ) : SocketEvent()
 
-    sealed class Message: SocketUpdate() {
+    sealed class Message: SocketEvent() {
         data class TextMessage(
             val text: String,
         ) : Message()
@@ -28,49 +28,49 @@ sealed class SocketUpdate {
 
     data class Failure(
         val throwable: Throwable? = null,
-    ) : SocketUpdate()
+    ) : SocketEvent()
 
-    object Aborted : SocketUpdate()
+    object Aborted : SocketEvent()
 }
 
 const val CHANNEL_BUFFER_EVENTS_SIZE = 1
 
 @ViewModelScoped
-class SocketUpdateHandler @Inject constructor(
+class SocketEventHandler @Inject constructor(
     @IODispatcher private val dispatcher: CoroutineDispatcher,
 ) {
-    val socketUpdates = Channel<SocketUpdate>(CHANNEL_BUFFER_EVENTS_SIZE)
+    val socketEvents = Channel<SocketEvent>(CHANNEL_BUFFER_EVENTS_SIZE)
     private val scope = CoroutineScope(dispatcher)
 
     fun onOpen(response: Response) {
         scope.launch {
-            socketUpdates.send(SocketUpdate.ChannelOpened(response))
+            socketEvents.send(SocketEvent.ChannelOpened(response))
         }
     }
 
     fun onMessage(text: String) {
         scope.launch {
-            socketUpdates.send(SocketUpdate.Message.TextMessage(text))
+            socketEvents.send(SocketEvent.Message.TextMessage(text))
         }
     }
 
     fun onMessage(bytes: ByteString) {
         scope.launch {
-            socketUpdates.send(SocketUpdate.Message.ByteStringMessage(bytes))
+            socketEvents.send(SocketEvent.Message.ByteStringMessage(bytes))
         }
     }
 
     fun onClosing() {
         scope.launch {
-            socketUpdates.send(SocketUpdate.Aborted)
+            socketEvents.send(SocketEvent.Aborted)
         }
-        socketUpdates.close()
+        socketEvents.close()
         scope.cancel()
     }
 
     fun onFailure(t: Throwable) {
         scope.launch {
-            socketUpdates.send(SocketUpdate.Failure(t))
+            socketEvents.send(SocketEvent.Failure(t))
         }
     }
 }

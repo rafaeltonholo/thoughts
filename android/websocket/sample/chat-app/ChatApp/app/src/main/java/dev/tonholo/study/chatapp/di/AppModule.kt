@@ -29,11 +29,8 @@ object AppModule {
     @Provides
     @Singleton
     @BaseWsUrl
-    fun providesBaseWebSocketUrl(): String = "ws://localhost:8080/ws/chat"
+    fun providesBaseWebSocketUrl(): String = "ws://192.168.1.21:8080/ws/chat"
 
-    @Provides
-    fun providesWebSocketListener(@IODispatcher dispatcher: CoroutineDispatcher): WebSocketListener =
-        ChatAppWebSocketListener(dispatcher)
 }
 
 @Qualifier

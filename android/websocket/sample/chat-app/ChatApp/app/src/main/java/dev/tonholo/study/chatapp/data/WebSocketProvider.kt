@@ -44,12 +44,12 @@ class WebSocketProvider @AssistedInject constructor(
         client.dispatcher.executorService.shutdown()
     }
 
-    fun sendMessage(socketUpdate: SocketUpdate.Message) {
-        when(socketUpdate) {
-            is SocketUpdate.Message.ByteStringMessage ->
-                webSocket.send(socketUpdate.byteString)
-            is SocketUpdate.Message.TextMessage ->
-                webSocket.send(socketUpdate.text)
+    fun sendMessage(socketEvent: SocketEvent.Message) {
+        when(socketEvent) {
+            is SocketEvent.Message.ByteStringMessage ->
+                webSocket.send(socketEvent.byteString)
+            is SocketEvent.Message.TextMessage ->
+                webSocket.send(socketEvent.text)
         }
     }
 
