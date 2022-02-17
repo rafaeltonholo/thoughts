@@ -6,7 +6,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dev.tonholo.study.chatapp.data.Message
+import dev.tonholo.study.chatapp.data.model.Message
+import dev.tonholo.study.chatapp.data.model.Owner
 import dev.tonholo.study.chatapp.di.coroutine.IODispatcher
 import dev.tonholo.study.chatapp.usecase.WebSocketInteractor
 import kotlinx.coroutines.CoroutineDispatcher
@@ -34,14 +35,17 @@ class ChatViewModel @Inject constructor(
                         val now = Date()
                         text?.let {
                             messages.add(
-                                Message(content = it, received = now)
+                                it.apply {
+                                    received = now
+                                }
                             )
                         }
 
                         bytes?.let {
                             messages.add(
                                 Message(
-                                    content = it.string(Charset.defaultCharset()),
+                                    owner = Owner.Unknown,
+                                    text = it.string(Charset.defaultCharset()),
                                     received = now,
                                 )
                             )

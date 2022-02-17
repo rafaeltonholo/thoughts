@@ -15,7 +15,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import dev.tonholo.study.chatapp.data.Message
+import dev.tonholo.study.chatapp.data.model.Message
+import dev.tonholo.study.chatapp.data.model.Owner
 import dev.tonholo.study.chatapp.ui.theme.ChatAppTheme
 import java.text.SimpleDateFormat
 import java.util.*
@@ -35,7 +36,7 @@ fun ChatMessageList(
                         modifier = Modifier
                             .padding(bottom = 8.dp),
                     ) {
-                        ChatMessage(text = content)
+                        ChatMessage(text = text)
                         Text(
                             text = SimpleDateFormat("dd MMM, HH:mm", Locale.getDefault()).run {
                                 format(received)
@@ -75,7 +76,7 @@ private fun DarkThemePreview() = Preview(true)
 @Composable
 private fun Preview(darkMode: Boolean) {
     ChatAppTheme(darkTheme = darkMode) {
-        val messages = (0..100).map { Message("Message $it", Date()) }
+        val messages = (0..100).map { Message(owner = Owner.Unknown, text = "Message $it", received = Date()) }
         Column(
             modifier = Modifier.background(MaterialTheme.colors.background)
         ) {

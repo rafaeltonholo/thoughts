@@ -1,7 +1,11 @@
 package dev.tonholo.study.chatapp.usecase
 
+import com.google.gson.Gson
+import com.google.gson.JsonElement
+import com.google.gson.JsonParser
 import dagger.hilt.android.scopes.ViewModelScoped
 import dev.tonholo.study.chatapp.data.*
+import dev.tonholo.study.chatapp.data.model.Message
 import kotlinx.coroutines.channels.consumeEach
 import okhttp3.Response
 import okio.ByteString
@@ -11,6 +15,7 @@ import javax.inject.Inject
 class WebSocketInteractor @Inject constructor(
     private val webSocketProviderFactory: WebSocketProviderFactory,
     private val socketEventHandler: SocketEventHandler,
+    private val gson: Gson,
 ) {
     private lateinit var webSocketProvider: WebSocketProvider
 
@@ -24,7 +29,7 @@ class WebSocketInteractor @Inject constructor(
     }
 
     suspend fun listen(
-        onMessage: (text: String?, bytes: ByteString?) -> Unit,
+        onMessage: (message: Message?, bytes: ByteString?) -> Unit,
         onError: (throwable: Throwable?, message: String) -> Unit,
         onChannelOpened: (response: Response) -> Unit = {}
     ) = socketEventHandler.socketEvents.consumeEach { update ->
@@ -34,7 +39,10 @@ class WebSocketInteractor @Inject constructor(
             is SocketEvent.Failure ->
                 onError(update.throwable, update.throwable?.localizedMessage ?: "Unhandled Exception")
             is SocketEvent.Message.ByteStringMessage -> onMessage(null, update.byteString)
-            is SocketEvent.Message.TextMessage -> onMessage(update.text, null)
+            is SocketEvent.Message.TextMessage -> {
+                val message = gson.fromJson(update.text, Message::class.java)
+                onMessage(message, null)
+            }
         }
     }
 

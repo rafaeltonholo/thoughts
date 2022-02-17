@@ -6,5 +6,5 @@ import kotlinx.serialization.Serializable
 data class Message(
     val owner: Connection,
     val text: String = "",
-    val rooms: List<String> = listOf(),
+    val rooms: List<Room> = listOf(),
 )

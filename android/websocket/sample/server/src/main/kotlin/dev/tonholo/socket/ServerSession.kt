@@ -8,14 +8,12 @@ import io.ktor.http.cio.websocket.*
 import io.ktor.util.*
 import io.ktor.websocket.*
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.consumeAsFlow
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.mapNotNull
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.isActive
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.util.*
+import kotlin.collections.LinkedHashSet
 
 private interface ServerSessionContract {
     suspend fun onOpen(session: WebSocketServerSession)
@@ -25,7 +23,7 @@ private interface ServerSessionContract {
 private class ServerSessionImpl : ServerSessionContract {
     companion object {
         private val connections = Collections.synchronizedMap<WebSocketServerSession, Connection.User?>(LinkedHashMap())
-        private val rooms = Collections.synchronizedMap<Room.PrivateRoom, Int>(LinkedHashMap())
+        private val rooms = Collections.synchronizedCollection<Room.NamedRoom>(LinkedHashSet())
 
         internal val instance by lazy {
             ServerSessionImpl()
@@ -34,7 +32,7 @@ private class ServerSessionImpl : ServerSessionContract {
 
     override suspend fun onOpen(session: WebSocketServerSession) {
         println("Adding user!")
-        val room = session.call.parameters.getOrFail("room").toRoom()
+        val currentRoom = session.call.parameters.getOrFail("room").toRoom()
         val username = session.call.parameters.getOrFail("username")
 
         if (connections.values.any { it.name.lowercase() == username.lowercase() }) {
@@ -45,27 +43,25 @@ private class ServerSessionImpl : ServerSessionContract {
         val currentConnection = Connection.User(
             session = session,
             name = username,
-            currentRoom = room,
+            currentRoom = currentRoom,
         )
 
-        (room as? Room.PrivateRoom)?.let {
-            val count = if (!rooms.contains(it)) {
-                1
-            } else {
-                rooms[it]?.plus(1)
+        (currentRoom as? Room.NamedRoom)?.run {
+            rooms.firstOrNull { it == currentRoom }?.let {
+                it.onlineMembers++
+            } ?: run {
+                rooms += this
             }
-
-            rooms[it] = count
         }
 
         connections.values
-            .filter { it.currentRoom == room }
+            .filter { it.currentRoom == currentRoom }
             .forEach {
                 it.session?.send(
                     Json.encodeToString(
                         Message(
                             owner = Connection.Server,
-                            text = "${currentConnection.name} connected to $room!",
+                            text = "${currentConnection.name} connected to $currentRoom!",
                         )
                     )
                 )
@@ -95,7 +91,7 @@ private class ServerSessionImpl : ServerSessionContract {
                     )
 
                     incoming.consumeAsFlow()
-                        .mapNotNull { it as? Frame.Text }
+                        .filterIsInstance<Frame.Text>()
                         .map { it.readText() }
                         .collect { receivedMessage ->
                             connections.values
@@ -131,13 +127,13 @@ private class ServerSessionImpl : ServerSessionContract {
                             )
                         }
 
-                    if (room is Room.PrivateRoom) {
-                        val roomCount = rooms[room]?.minus(1) ?: 0
-                        if (roomCount == 0) {
-                            rooms.remove(room)
-                        } else {
-                            rooms[room] = roomCount
+                    if (room is Room.NamedRoom) {
+                        with(rooms.first { it == room }) {
+                            if (--onlineMembers == 0) {
+                                rooms.remove(this)
+                            }
                         }
+
                         broadcastRoomList()
                     }
                 }
@@ -150,16 +146,15 @@ private class ServerSessionImpl : ServerSessionContract {
             .filter { connection -> connection.currentRoom == Room.All }
             .forEach { connection ->
                 connection.session?.run {
+                    val message = Message(
+                        owner = Connection.Server,
+                        text = "Here is a list of open rooms",
+                        rooms = rooms
+                            .map { it as Room }
+                            .toList(),
+                    )
                     send(
-                        Json.encodeToString(
-                            Message(
-                                owner = Connection.Server,
-                                text = "Here is a list of open rooms",
-                                rooms = rooms
-                                    .map { "${it.key.name} (${it.value} online members)" }
-                                    .toList(),
-                            )
-                        )
+                        Json.encodeToString(message)
                     )
                 }
             }
