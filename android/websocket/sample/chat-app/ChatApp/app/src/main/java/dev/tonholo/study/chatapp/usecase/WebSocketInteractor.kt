@@ -1,5 +1,6 @@
 package dev.tonholo.study.chatapp.usecase
 
+import android.util.Log
 import com.google.gson.Gson
 import com.google.gson.JsonElement
 import com.google.gson.JsonParser
@@ -10,6 +11,8 @@ import kotlinx.coroutines.channels.consumeEach
 import okhttp3.Response
 import okio.ByteString
 import javax.inject.Inject
+
+private const val TAG = "WebSocketInteractor"
 
 @ViewModelScoped
 class WebSocketInteractor @Inject constructor(
@@ -29,9 +32,9 @@ class WebSocketInteractor @Inject constructor(
     }
 
     suspend fun listen(
-        onMessage: (message: Message?, bytes: ByteString?) -> Unit,
-        onError: (throwable: Throwable?, message: String) -> Unit,
-        onChannelOpened: (response: Response) -> Unit = {}
+        onMessage: suspend (message: Message?, bytes: ByteString?) -> Unit,
+        onError: suspend (throwable: Throwable?, message: String) -> Unit,
+        onChannelOpened: suspend (response: Response) -> Unit = {}
     ) = socketEventHandler.socketEvents.consumeEach { update ->
         when(update) {
             SocketEvent.Aborted -> onError(null, "Socket connection closed")
@@ -54,6 +57,7 @@ class WebSocketInteractor @Inject constructor(
         if (!::webSocketProvider.isInitialized)
             throw IllegalStateException("Can't stop web socket before starting it")
 
+        Log.i(TAG, "stop: stopping socket")
         webSocketProvider.stopSocket()
     }
 }

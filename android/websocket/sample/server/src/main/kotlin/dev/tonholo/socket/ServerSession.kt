@@ -86,6 +86,11 @@ private class ServerSessionImpl : ServerSessionContract {
                                 text = "You are connected! There are ${
                                     connections.count { it.value.currentRoom == room }
                                 } users here.",
+                                rooms = if (room == Room.All) {
+                                    rooms.toList()
+                                } else {
+                                    listOf()
+                                },
                             )
                         )
                     )
