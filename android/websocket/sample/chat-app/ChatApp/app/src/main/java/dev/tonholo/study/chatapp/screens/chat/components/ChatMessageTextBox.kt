@@ -47,8 +47,8 @@ fun ChatMessageTextBox(
         )
         Button(
             onClick = {
-                message = ""
                 onMessageSent(message)
+                message = ""
             },
             shape = CircleShape,
             modifier = Modifier.size(48.dp)
