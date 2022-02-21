@@ -4,7 +4,8 @@ import dev.tonholo.study.chatapp.di.coroutine.IODispatcher
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 import okhttp3.Response
 import okio.ByteString
@@ -33,44 +34,44 @@ sealed class SocketEvent {
     object Aborted : SocketEvent()
 }
 
-const val CHANNEL_BUFFER_EVENTS_SIZE = 1
+const val CHANNEL_BUFFER_EVENTS_SIZE = 10
 
 @Singleton
 class SocketEventHandler @Inject constructor(
     @IODispatcher private val dispatcher: CoroutineDispatcher,
 ) {
-    val socketEvents = Channel<SocketEvent>(CHANNEL_BUFFER_EVENTS_SIZE)
+    private val _socketEvents = MutableSharedFlow<SocketEvent>(CHANNEL_BUFFER_EVENTS_SIZE)
+    val socketEvents = _socketEvents.asSharedFlow()
     private val scope = CoroutineScope(dispatcher)
 
     fun onOpen(response: Response) {
         scope.launch {
-            socketEvents.send(SocketEvent.ChannelOpened(response))
+            _socketEvents.emit(SocketEvent.ChannelOpened(response))
         }
     }
 
     fun onMessage(text: String) {
         scope.launch {
-            socketEvents.send(SocketEvent.Message.TextMessage(text))
+            _socketEvents.emit(SocketEvent.Message.TextMessage(text))
         }
     }
 
     fun onMessage(bytes: ByteString) {
         scope.launch {
-            socketEvents.send(SocketEvent.Message.ByteStringMessage(bytes))
+            _socketEvents.emit(SocketEvent.Message.ByteStringMessage(bytes))
         }
     }
 
     fun onClosing() {
         scope.launch {
-            socketEvents.send(SocketEvent.Aborted)
+            _socketEvents.emit(SocketEvent.Aborted)
         }
-        socketEvents.close()
         scope.cancel()
     }
 
     fun onFailure(t: Throwable) {
         scope.launch {
-            socketEvents.send(SocketEvent.Failure(t))
+            _socketEvents.emit(SocketEvent.Failure(t))
         }
     }
 }
