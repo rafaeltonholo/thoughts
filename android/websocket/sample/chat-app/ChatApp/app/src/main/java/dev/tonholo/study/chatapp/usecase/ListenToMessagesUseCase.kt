@@ -1,15 +1,17 @@
 package dev.tonholo.study.chatapp.usecase
 
+import android.util.Log
 import com.google.gson.Gson
+import dev.tonholo.study.chatapp.data.model.Message
 import dev.tonholo.study.chatapp.data.remote.SocketEvent
 import dev.tonholo.study.chatapp.data.remote.SocketEventHandler
-import dev.tonholo.study.chatapp.data.model.Message
 import dev.tonholo.study.chatapp.data.remote.WebSocketProvider
-import kotlinx.coroutines.channels.consumeEach
+import kotlinx.coroutines.flow.collect
 import okhttp3.Response
 import okio.ByteString
 import javax.inject.Inject
 
+private const val TAG = "ListenToMessagesUseCase"
 class ListenToMessagesUseCase @Inject constructor(
     private val webSocketProvider: WebSocketProvider,
     private val socketEventHandler: SocketEventHandler,
@@ -30,7 +32,8 @@ class ListenToMessagesUseCase @Inject constructor(
             return Result.NotOpenedConnection
         }
 
-        socketEventHandler.socketEvents.consumeEach { update ->
+        socketEventHandler.socketEvents.collect { update ->
+            Log.d(TAG, "socketEvents.collect: update = $update")
             when (update) {
                 SocketEvent.Aborted -> onError(null, "Socket connection closed")
                 is SocketEvent.ChannelOpened -> onChannelOpened(update.response)
