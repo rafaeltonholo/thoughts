@@ -11,24 +11,29 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.ramcosta.composedestinations.annotation.Destination
+import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import dev.tonholo.study.chatapp.screens.chat.components.ChatMessageList
 import dev.tonholo.study.chatapp.screens.chat.components.ChatMessageTextBox
 import dev.tonholo.study.chatapp.screens.chat.components.ChatTopBar
 
 @Composable
+@Destination
 fun ChatScreen(
-    room: String = "firstTest",
-    username: String = "Rafael",
+    room: String,
+    navigator: DestinationsNavigator,
     viewModel: ChatViewModel = hiltViewModel(),
 ) {
-    viewModel.subscribeTo(room, username)
+    viewModel.enterRoom(room)
+    viewModel.listenToMessages()
     val messages = remember { viewModel.messages }
+    val hasNewMessage by remember { viewModel.hasNewMessage }
     val error by remember { viewModel.error }
 
     Scaffold(
         topBar = {
             ChatTopBar(room = room) {
-
+                navigator.popBackStack()
             }
         },
     ) { padding ->
@@ -40,7 +45,8 @@ fun ChatScreen(
         ) {
             ChatMessageList(
                 messages = messages,
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
+                hasNewMessage = hasNewMessage,
             )
             ChatMessageTextBox(
                 modifier = Modifier

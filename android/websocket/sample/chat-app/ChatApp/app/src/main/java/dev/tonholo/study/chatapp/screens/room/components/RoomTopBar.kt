@@ -22,6 +22,7 @@ import dev.tonholo.study.chatapp.ui.theme.ChatAppTheme
 
 @Composable
 fun RoomTopBar(
+    username: String? = null,
     onBackButtonClicked: () -> Unit = {},
 ) {
     Row(
@@ -37,8 +38,13 @@ fun RoomTopBar(
                 colorFilter = ColorFilter.tint(MaterialTheme.colors.onPrimary)
             )
         }
+        val usernameLabel = if (username.isNullOrBlank()) {
+            ""
+        } else {
+            "$username "
+        }
         Text(
-            text = "Welcome to Instant chat!",
+            text = "Welcome ${usernameLabel}to Instant chat!",
             modifier = Modifier.fillMaxWidth(),
             color = MaterialTheme.colors.onPrimary,
             fontWeight = FontWeight.Bold,
@@ -61,6 +67,6 @@ private fun DarkThemePreview() = Preview(true)
 @Composable
 private fun Preview(darkMode: Boolean) {
     ChatAppTheme(darkTheme = darkMode) {
-        RoomTopBar()
+        RoomTopBar("")
     }
 }

@@ -1,4 +1,4 @@
-package dev.tonholo.study.chatapp.util
+package dev.tonholo.study.chatapp.util.typeAdapter
 
 import com.google.gson.TypeAdapter
 import com.google.gson.stream.JsonReader
@@ -17,9 +17,9 @@ class OwnerTypeAdapter : TypeAdapter<Owner>() {
                 is Owner.User -> "dev.tonholo.data.Connection.User"
             }
         )
-        name("id")
+        name(value::id.name)
         value(value.id)
-        name("name")
+        name(value::name.name)
         value(value.name)
         endObject()
     }

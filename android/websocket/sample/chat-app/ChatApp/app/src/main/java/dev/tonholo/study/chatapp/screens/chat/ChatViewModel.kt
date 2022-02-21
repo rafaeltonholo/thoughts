@@ -9,9 +9,13 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.tonholo.study.chatapp.data.model.Message
 import dev.tonholo.study.chatapp.data.model.Owner
 import dev.tonholo.study.chatapp.di.coroutine.IODispatcher
-import dev.tonholo.study.chatapp.usecase.WebSocketInteractor
+import dev.tonholo.study.chatapp.di.coroutine.MainDispatcher
+import dev.tonholo.study.chatapp.usecase.EnterRoomUseCase
+import dev.tonholo.study.chatapp.usecase.ListenToMessagesUseCase
+import dev.tonholo.study.chatapp.usecase.SendMessageUseCase
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.nio.charset.Charset
 import java.util.*
 import javax.inject.Inject
@@ -20,17 +24,23 @@ private const val TAG = "ChatViewModel"
 
 @HiltViewModel
 class ChatViewModel @Inject constructor(
-    private val webSocketInteractor: WebSocketInteractor,
-    @IODispatcher private val dispatcher: CoroutineDispatcher,
+    private val enterRoomUseCase: EnterRoomUseCase,
+    private val listenToMessagesUseCase:  ListenToMessagesUseCase,
+    private val sendMessageUseCase: SendMessageUseCase,
+    @IODispatcher private val ioDispatcher: CoroutineDispatcher,
+    @MainDispatcher private val mainDispatcher: CoroutineDispatcher,
 ) : ViewModel() {
     val messages = mutableStateListOf<Message>()
     val error = mutableStateOf("")
+    val hasNewMessage = mutableStateOf(false)
 
-    fun subscribeTo(room: String, username: String) {
-        viewModelScope.launch(dispatcher) {
-            webSocketInteractor
-                .start(room, username)
-                .listen(
+    fun enterRoom(room: String) {
+        enterRoomUseCase(roomName = room)
+    }
+
+    fun listenToMessages() {
+        viewModelScope.launch(ioDispatcher) {
+            listenToMessagesUseCase(
                     onMessage = { text, bytes ->
                         val now = Date()
                         text?.let {
@@ -50,21 +60,24 @@ class ChatViewModel @Inject constructor(
                                 )
                             )
                         }
+
+                        hasNewMessage.value = true
                     },
                     onError = { throwable, message ->
-                        error.value = message
-                        Log.e(TAG, "subscribeTo: Error", throwable)
+                        Log.e(TAG, "listenRooms: Error", throwable)
+                        withContext(mainDispatcher) {
+                            error.value = message
+                        }
                     }
                 )
         }
     }
 
-    fun sendMessage(message: String) {
-        webSocketInteractor.send(message)
+    fun readNewMessage() {
+        hasNewMessage.value = false
     }
 
-    override fun onCleared() {
-        webSocketInteractor.stop()
-        super.onCleared()
+    fun sendMessage(message: String) {
+        sendMessageUseCase(message)
     }
 }

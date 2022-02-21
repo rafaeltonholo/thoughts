@@ -8,9 +8,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -25,10 +27,20 @@ import java.util.*
 fun ChatMessageList(
     messages: List<Message>,
     modifier: Modifier = Modifier,
+    hasNewMessage: Boolean = false,
 ) {
+    val listState = rememberLazyListState()
+
+    LaunchedEffect(Unit) {
+        if (hasNewMessage) {
+            listState.scrollToItem(messages.size - 1)
+        }
+    }
+
     if (messages.isNotEmpty()) {
         LazyColumn(
-            modifier = modifier.padding(8.dp)
+            modifier = modifier.padding(8.dp),
+            state = listState
         ) {
             items(messages) { message ->
                 with(message) {

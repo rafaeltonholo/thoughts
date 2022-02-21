@@ -1,6 +1,5 @@
-package dev.tonholo.study.chatapp.data
+package dev.tonholo.study.chatapp.data.remote
 
-import dagger.hilt.android.scopes.ViewModelScoped
 import dev.tonholo.study.chatapp.di.coroutine.IODispatcher
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
@@ -10,6 +9,7 @@ import kotlinx.coroutines.launch
 import okhttp3.Response
 import okio.ByteString
 import javax.inject.Inject
+import javax.inject.Singleton
 
 sealed class SocketEvent {
     data class ChannelOpened(
@@ -35,7 +35,7 @@ sealed class SocketEvent {
 
 const val CHANNEL_BUFFER_EVENTS_SIZE = 1
 
-@ViewModelScoped
+@Singleton
 class SocketEventHandler @Inject constructor(
     @IODispatcher private val dispatcher: CoroutineDispatcher,
 ) {

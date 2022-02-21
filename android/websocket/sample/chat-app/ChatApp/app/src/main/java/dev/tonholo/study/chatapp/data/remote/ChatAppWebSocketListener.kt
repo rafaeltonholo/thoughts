@@ -1,4 +1,4 @@
-package dev.tonholo.study.chatapp.data
+package dev.tonholo.study.chatapp.data.remote
 
 import okhttp3.Response
 import okhttp3.WebSocket
