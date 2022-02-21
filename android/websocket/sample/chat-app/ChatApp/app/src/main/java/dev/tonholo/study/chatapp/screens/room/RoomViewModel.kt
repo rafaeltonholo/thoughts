@@ -14,6 +14,7 @@ import dev.tonholo.study.chatapp.di.coroutine.IODispatcher
 import dev.tonholo.study.chatapp.di.coroutine.MainDispatcher
 import dev.tonholo.study.chatapp.usecase.ListenToMessagesUseCase
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -42,10 +43,11 @@ class RoomViewModel @Inject constructor(
     }
 
     fun listenRooms() {
+        Log.d(TAG, "listenRooms() called")
         isConnected = false
 
         viewModelScope.launch(ioDispatcher) {
-            isConnected = listenToMessagesUseCase(
+            val result = listenToMessagesUseCase(
                 onChannelOpened = {
                     Log.i(TAG, "onChannelOpened: response = $it")
                 },
@@ -60,11 +62,19 @@ class RoomViewModel @Inject constructor(
                     error.value = message
                     Log.e(TAG, "listenRooms: Error", throwable)
                 }
-            ) is ListenToMessagesUseCase.Result.Listening
+            )
+
+            Log.d(TAG, "listenRooms: result of listenToMessagesUseCase = $result")
+
+            isConnected = result is ListenToMessagesUseCase.Result.Listening
 
             withContext(mainDispatcher) {
                 if (!isConnected && usernameState.value.isBlank()) {
                     requestUsername.value = true
+                } else if (!isConnected) {
+                    Log.d(TAG, "listenRooms: isn't connected, re-trying in 500ms")
+                    delay(500L)
+                    listenRooms()
                 }
             }
         }
