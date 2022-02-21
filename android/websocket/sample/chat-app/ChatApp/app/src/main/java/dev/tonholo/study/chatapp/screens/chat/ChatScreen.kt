@@ -5,9 +5,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Scaffold
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -24,10 +22,14 @@ fun ChatScreen(
     navigator: DestinationsNavigator,
     viewModel: ChatViewModel = hiltViewModel(),
 ) {
-    viewModel.enterRoom(room)
-    viewModel.listenToMessages()
-    val messages = remember { viewModel.messages }
+    LaunchedEffect(key1 = Unit) {
+        viewModel.enterRoom(room)
+        viewModel.listenToMessages()
+    }
+
+    val messages by remember { viewModel.messages }
     val hasNewMessage by remember { viewModel.hasNewMessage }
+    val username by remember { viewModel.usernameState }
     val error by remember { viewModel.error }
 
     Scaffold(
@@ -44,10 +46,13 @@ fun ChatScreen(
             verticalArrangement = Arrangement.SpaceEvenly,
         ) {
             ChatMessageList(
+                username = username,
                 messages = messages,
                 modifier = Modifier.weight(1f),
                 hasNewMessage = hasNewMessage,
-            )
+            ) {
+                viewModel.confirmNewMessageRead()
+            }
             ChatMessageTextBox(
                 modifier = Modifier
                     .padding(8.dp),

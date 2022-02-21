@@ -25,15 +25,18 @@ import java.util.*
 
 @Composable
 fun ChatMessageList(
+    username: String,
     messages: List<Message>,
     modifier: Modifier = Modifier,
     hasNewMessage: Boolean = false,
+    onReadNewMessage: () -> Unit = {},
 ) {
     val listState = rememberLazyListState()
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(hasNewMessage) {
         if (hasNewMessage) {
             listState.scrollToItem(messages.size - 1)
+            onReadNewMessage()
         }
     }
 
@@ -46,9 +49,9 @@ fun ChatMessageList(
                 with(message) {
                     Column(
                         modifier = Modifier
-                            .padding(bottom = 8.dp),
+                            .padding(bottom = 16.dp),
                     ) {
-                        ChatMessage(text = text)
+                        ChatMessage(text = text, owner = owner.name, ownedByUser = username == owner.name)
                         Text(
                             text = SimpleDateFormat("dd MMM, HH:mm", Locale.getDefault()).run {
                                 format(received)
@@ -92,7 +95,7 @@ private fun Preview(darkMode: Boolean) {
         Column(
             modifier = Modifier.background(MaterialTheme.colors.background)
         ) {
-            ChatMessageList(messages)
+            ChatMessageList(username = "", messages)
         }
     }
 }

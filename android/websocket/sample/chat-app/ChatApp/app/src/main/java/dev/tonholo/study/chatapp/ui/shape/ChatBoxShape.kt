@@ -24,13 +24,18 @@ val CHAT_BOX_SHAPE_ARROW_HEIGHT = 8.dp
 
 class ChatBoxShape(
     private val cornerRadius: Dp,
+    private val onRightSide: Boolean = true,
 ) : Shape {
     override fun createOutline(size: Size, layoutDirection: LayoutDirection, density: Density): Outline =
         Outline.Generic(
-            path = drawPath(size = size, density = density)
+            path = if (onRightSide) {
+                arrowOnRightSidePath(size = size, density = density)
+            } else {
+                arrowOnLeftSidePath(size = size, density = density)
+            }
         )
 
-    private fun drawPath(size: Size, density: Density): Path {
+    private fun arrowOnRightSidePath(size: Size, density: Density): Path {
         fun Dp.toFloat() = with(density) {
             toPx()
         }
@@ -84,14 +89,92 @@ class ChatBoxShape(
             close()
         }
     }
+
+    private fun arrowOnLeftSidePath(size: Size, density: Density): Path {
+        fun Dp.toFloat() = with(density) {
+            toPx()
+        }
+
+        return Path().apply {
+            reset()
+
+            val cornerRadiusPx = cornerRadius.toFloat()
+            val arrowSize = CHAT_BOX_SHAPE_ARROW_SIZE.toFloat()
+            val arrowHeight = CHAT_BOX_SHAPE_ARROW_HEIGHT.toFloat()
+
+            lineTo(x = size.width, y = 0f)
+
+            arcTo(
+                Rect(
+                    left = size.width - cornerRadiusPx,
+                    top = 0f,
+                    right = size.width,
+                    bottom = cornerRadiusPx,
+                ),
+                startAngleDegrees = 270f,
+                sweepAngleDegrees = 90f,
+                forceMoveTo = false,
+            ) // right top corner
+            lineTo(x = size.width, y = size.height - cornerRadiusPx)
+            arcTo(
+                Rect(
+                    left = size.width - cornerRadiusPx,
+                    top = size.height - cornerRadiusPx,
+                    right = size.width,
+                    bottom = size.height,
+                ),
+                startAngleDegrees = 0f,
+                sweepAngleDegrees = 90f,
+                forceMoveTo = false,
+            ) // right bottom corner
+            lineTo(x = arrowSize + cornerRadiusPx, y = size.height)
+            arcTo(
+                Rect(
+                    left = arrowSize,
+                    top = size.height - cornerRadiusPx,
+                    right = arrowSize + cornerRadiusPx,
+                    bottom = size.height,
+                ),
+                startAngleDegrees = 90f,
+                sweepAngleDegrees = 90f,
+                forceMoveTo = false,
+            ) // left bottom corner
+
+            lineTo(x = arrowSize, y = arrowHeight)
+            lineTo(x = 0f, y = 0f)
+            close()
+        }
+    }
 }
 
 @Preview
 @Composable
-private fun ShapePreview() {
+private fun RightSideChatBoxShapePreview() {
     ChatAppTheme {
         Surface(
             shape = ChatBoxShape(4.dp),
+            modifier = Modifier
+                .width(100.dp)
+                .padding(16.dp)
+        ) {
+            Text(
+                text = "Test",
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(end = CHAT_BOX_SHAPE_ARROW_SIZE)
+            )
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun LeftSideChatBoxShapePreview() {
+    ChatAppTheme {
+        Surface(
+            shape = ChatBoxShape(
+                cornerRadius = 4.dp,
+                onRightSide = false,
+            ),
             modifier = Modifier
                 .width(100.dp)
                 .padding(16.dp)
