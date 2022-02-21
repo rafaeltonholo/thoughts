@@ -38,7 +38,8 @@ class WebSocketProvider @Inject constructor(
     }
 
     fun sendCommand(command: SocketCommand) {
-        webSocket.send(gson.toJson(command))
+        val json = gson.toJson(command, SocketCommand::class.java)
+        webSocket.send(json)
     }
 
     fun stopSocket() {
